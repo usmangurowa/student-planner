@@ -67,6 +67,7 @@ export function EventDialog({
   const [error, setError] = useState<string | null>(null);
   const [startDateOpen, setStartDateOpen] = useState(false);
   const [endDateOpen, setEndDateOpen] = useState(false);
+  const [type, setType] = useState<"event" | "task">("event");
 
   // Debug log to check what event is being passed
   useEffect(() => {
@@ -77,17 +78,21 @@ export function EventDialog({
     if (event) {
       setTitle(event.title || "");
       setDescription(event.description || "");
+      const isTask = (event.label ?? "").toLowerCase() === "task";
+      const reminder = isTask ? (event.reminder ?? event.start) : event.start;
+      const due = isTask ? event.start : event.end;
 
-      const start = new Date(event.start);
-      const end = new Date(event.end);
+      const start = new Date(reminder);
+      const end = new Date(due);
 
       setStartDate(start);
       setEndDate(end);
       setStartTime(formatTimeForInput(start));
       setEndTime(formatTimeForInput(end));
-      setAllDay(event.allDay || false);
+      setAllDay(isTask ? false : event.allDay || false);
       setLocation(event.location || "");
       setColor((event.color as EventColor) || "sky");
+      setType(isTask ? "task" : "event");
       setError(null); // Reset error when opening dialog
     } else {
       resetForm();
@@ -105,6 +110,7 @@ export function EventDialog({
     setLocation("");
     setColor("blue");
     setError(null);
+    setType("event");
   };
 
   const formatTimeForInput = (date: Date) => {
@@ -134,7 +140,10 @@ export function EventDialog({
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    if (!allDay) {
+    if (type === "event" && allDay) {
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+    } else {
       const [startHours = 0, startMinutes = 0] = startTime
         .split(":")
         .map(Number);
@@ -152,11 +161,8 @@ export function EventDialog({
         return;
       }
 
-      start.setHours(startHours, startMinutes, 0);
-      end.setHours(endHours, endMinutes, 0);
-    } else {
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
+      start.setHours(startHours, startMinutes, 0, 0);
+      end.setHours(endHours, endMinutes, 0, 0);
     }
 
     // Validate that end date is not before start date
@@ -174,9 +180,10 @@ export function EventDialog({
       description,
       start,
       end,
-      allDay,
+      allDay: type === "event" ? allDay : false,
       location,
       color,
+      label: type === "task" ? "Task" : undefined,
     });
   };
 
@@ -243,6 +250,23 @@ export function EventDialog({
         )}
         <div className="grid gap-4 py-4">
           <div className="*:not-first:mt-1.5">
+            <Label>Type</Label>
+            <RadioGroup
+              className="flex gap-3"
+              value={type}
+              onValueChange={(val: "event" | "task") => setType(val)}
+            >
+              <div className="flex items-center gap-2">
+                <RadioGroupItem id="type-event" value="event" />
+                <Label htmlFor="type-event">Event</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem id="type-task" value="task" />
+                <Label htmlFor="type-task">Task</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          <div className="*:not-first:mt-1.5">
             <Label htmlFor="title">Title</Label>
             <Input
               id="title"
@@ -263,7 +287,9 @@ export function EventDialog({
 
           <div className="flex gap-4">
             <div className="flex-1 *:not-first:mt-1.5">
-              <Label htmlFor="start-date">Start Date</Label>
+              <Label htmlFor="start-date">
+                {type === "task" ? "Reminder Date" : "Start Date"}
+              </Label>
               <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -310,9 +336,11 @@ export function EventDialog({
               </Popover>
             </div>
 
-            {!allDay && (
+            {(type === "task" || (type === "event" && !allDay)) && (
               <div className="min-w-28 *:not-first:mt-1.5">
-                <Label htmlFor="start-time">Start Time</Label>
+                <Label htmlFor="start-time">
+                  {type === "task" ? "Reminder Time" : "Start Time"}
+                </Label>
                 <Select value={startTime} onValueChange={setStartTime}>
                   <SelectTrigger id="start-time">
                     <SelectValue placeholder="Select time" />
@@ -329,79 +357,87 @@ export function EventDialog({
             )}
           </div>
 
-          <div className="flex gap-4">
-            <div className="flex-1 *:not-first:mt-1.5">
-              <Label htmlFor="end-date">End Date</Label>
-              <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="end-date"
-                    variant={"outline"}
-                    className={cn(
-                      "group bg-background hover:bg-background border-input w-full justify-between px-3 font-normal outline-offset-0 outline-none focus-visible:outline-[3px]",
-                      !endDate && "text-muted-foreground"
-                    )}
-                  >
-                    <span
+          {(type === "event" || type === "task") && (
+            <div className="flex gap-4">
+              <div className="flex-1 *:not-first:mt-1.5">
+                <Label htmlFor="end-date">
+                  {type === "task" ? "Due Date" : "End Date"}
+                </Label>
+                <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      id="end-date"
+                      variant={"outline"}
                       className={cn(
-                        "truncate",
+                        "group bg-background hover:bg-background border-input w-full justify-between px-3 font-normal outline-offset-0 outline-none focus-visible:outline-[3px]",
                         !endDate && "text-muted-foreground"
                       )}
                     >
-                      {endDate ? format(endDate, "PPP") : "Pick a date"}
-                    </span>
-                    <CalendarIcon
-                      size={16}
-                      className="text-muted-foreground/80 shrink-0"
-                      aria-hidden="true"
+                      <span
+                        className={cn(
+                          "truncate",
+                          !endDate && "text-muted-foreground"
+                        )}
+                      >
+                        {endDate ? format(endDate, "PPP") : "Pick a date"}
+                      </span>
+                      <CalendarIcon
+                        size={16}
+                        className="text-muted-foreground/80 shrink-0"
+                        aria-hidden="true"
+                      />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-2" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      defaultMonth={endDate}
+                      disabled={{ before: startDate }}
+                      onSelect={(date) => {
+                        if (date) {
+                          setEndDate(date);
+                          setError(null);
+                          setEndDateOpen(false);
+                        }
+                      }}
                     />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-2" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={endDate}
-                    defaultMonth={endDate}
-                    disabled={{ before: startDate }}
-                    onSelect={(date) => {
-                      if (date) {
-                        setEndDate(date);
-                        setError(null);
-                        setEndDateOpen(false);
-                      }
-                    }}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            {!allDay && (
-              <div className="min-w-28 *:not-first:mt-1.5">
-                <Label htmlFor="end-time">End Time</Label>
-                <Select value={endTime} onValueChange={setEndTime}>
-                  <SelectTrigger id="end-time">
-                    <SelectValue placeholder="Select time" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timeOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  </PopoverContent>
+                </Popover>
               </div>
-            )}
-          </div>
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="all-day"
-              checked={allDay}
-              onCheckedChange={(checked) => setAllDay(checked === true)}
-            />
-            <Label htmlFor="all-day">All day</Label>
-          </div>
+              {(type === "task" || (type === "event" && !allDay)) && (
+                <div className="min-w-28 *:not-first:mt-1.5">
+                  <Label htmlFor="end-time">
+                    {type === "task" ? "Due Time" : "End Time"}
+                  </Label>
+                  <Select value={endTime} onValueChange={setEndTime}>
+                    <SelectTrigger id="end-time">
+                      <SelectValue placeholder="Select time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          )}
+
+          {type === "event" && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="all-day"
+                checked={allDay}
+                onCheckedChange={(checked) => setAllDay(checked === true)}
+              />
+              <Label htmlFor="all-day">All day</Label>
+            </div>
+          )}
 
           <div className="*:not-first:mt-1.5">
             <Label htmlFor="location">Location</Label>

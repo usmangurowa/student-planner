@@ -44,14 +44,18 @@ export default function Component() {
   const upsert = useMutation({
     mutationFn: async (event: CalendarEvent) => {
       const input = fromCalendarEvent(event);
+      const isTask = (event.label ?? "").toLowerCase() === "task";
+
       return upsertEvent({
         id: input.id,
         title: input.title,
         description: input.description ?? null,
+        category: isTask ? "task" : "event",
+        // Tasks: start = reminder, end = due date
         start:
           input.start instanceof Date ? input.start.toISOString() : input.start,
         end: input.end instanceof Date ? input.end.toISOString() : input.end,
-        allDay: input.allDay ?? null,
+        allDay: isTask ? false : (input.allDay ?? null),
         color: input.color ?? null,
         location: input.location ?? null,
       });

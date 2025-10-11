@@ -15,11 +15,26 @@ const allowedColors: ReadonlyArray<EventColor> = [
   "emerald",
 ] as const;
 
+export const isTaskRow = (row: EventRow) => row.category === "task";
+
 export const toCalendarEvent = (row: EventRow): CalendarEvent => {
-  const startDate = row.start ? new Date(row.start) : new Date();
-  const endDate = row.end
-    ? new Date(row.end)
-    : new Date(startDate.getTime() + 60 * 60 * 1000);
+  const isTask = isTaskRow(row);
+
+  // Tasks: display at due time (stored in row.end), reminder is row.start
+  const displayStart = isTask
+    ? row.end
+      ? new Date(row.end)
+      : new Date()
+    : row.start
+      ? new Date(row.start)
+      : new Date();
+
+  const displayEnd = isTask
+    ? new Date(displayStart.getTime() + 30 * 60 * 1000)
+    : row.end
+      ? new Date(row.end)
+      : new Date(displayStart.getTime() + 60 * 60 * 1000);
+
   const color = allowedColors.includes(
     (row.color as EventColor) ?? ("" as EventColor)
   )
@@ -30,11 +45,13 @@ export const toCalendarEvent = (row: EventRow): CalendarEvent => {
     id: row.id,
     title: row.title ?? "Untitled",
     description: row.description ?? undefined,
-    start: startDate,
-    end: endDate,
-    allDay: row.allDay ?? undefined,
+    start: displayStart,
+    end: displayEnd,
+    allDay: isTask ? false : (row.allDay ?? undefined),
     color,
     location: row.location ?? undefined,
+    label: isTask ? "Task" : undefined,
+    reminder: isTask && row.start ? new Date(row.start) : undefined,
   };
 };
 

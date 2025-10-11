@@ -4,10 +4,15 @@ import type { TablesInsert, TablesUpdate } from "@/lib/supabase/database.types";
 export type InsertEvent = TablesInsert<"events">;
 export type UpdateEvent = TablesUpdate<"events">;
 
-export type UpsertEventFlexible = Omit<InsertEvent, "start" | "end"> & {
+export type UpsertEventFlexible = Omit<
+  InsertEvent,
+  "start" | "end" | "dueDate" | "category"
+> & {
   id?: string;
   start?: string | Date | null;
   end?: string | Date | null;
+  dueDate?: string | Date | null;
+  category?: string | null;
 };
 
 export const upsertEvent = async (input: UpsertEventFlexible) => {
@@ -28,6 +33,8 @@ export const upsertEvent = async (input: UpsertEventFlexible) => {
     // Ensure dates are stored as ISO strings
     start: input.start ? new Date(input.start).toISOString() : null,
     end: input.end ? new Date(input.end).toISOString() : null,
+    dueDate: input.dueDate ? new Date(input.dueDate).toISOString() : null,
+    category: input.category ?? null,
   };
 
   const { data, error } = await supabase

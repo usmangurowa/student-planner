@@ -10,6 +10,7 @@ export interface CalendarEvent {
   color?: EventColor;
   label?: string;
   location?: string;
+  reminder?: Date; // for tasks: original reminder datetime (DB start)
 }
 
 export type EventColor = "blue" | "orange" | "violet" | "rose" | "emerald";
