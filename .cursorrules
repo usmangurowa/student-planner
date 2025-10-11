@@ -1,0 +1,85 @@
+PROJECT OVERVIEW
+
+- Stack: Next.js App Router, TypeScript, Tailwind, shadcn/ui, React Hook Form + Zod, TanStack Query, Supabase (Auth/DB/Storage), Hono RPC.
+
+ARCHITECTURE & DIRECTORIES
+
+- src/app: App Router routes and pages. Keep server routes in route.ts; UI pages in page.tsx.
+- src/components: Only presentational or client logic components. Co-locate shared UI under components/ui.
+- src/lib: Reusable libraries and clients.
+  - lib/supabase: SSR/Browser clients and middleware helpers.
+    - supabase/mutations: client-side mutation helpers (e.g., upserts)
+    - supabase/queries: client-side query helpers (e.g., reads)
+  - lib/hono: Hono app and typed client factory.
+  - lib/ai: AI utilities.
+  - Server-side mutations/queries may be colocated within route/page files.
+- supabase/migrations: SQL migrations with RLS first mindset.
+
+AUTH & MIDDLEWARE RULES
+
+- Enforce email confirmation and onboarding via middleware.
+  - Not logged in + protected → /login
+  - Logged in + not confirmed → /auth/confirm-email
+  - Logged in + confirmed + not onboarded (no user_metadata.displayName or !profileComplete) → /onboarding
+  - Logged in hitting /login or /register → smart-redirect per above
+- Public: /, /login, /register, /auth/\*, static assets.
+- Confirmations: Enable confirmations in Supabase; signUp must set emailRedirectTo to /auth/confirm?next=/onboarding.
+
+DATA MODEL
+
+- Table public.profiles: id (uuid, PK, FK auth.users), first_name, last_name, display_name (required), extra jsonb, timestamps, RLS: select/insert/update by owner.
+- user_metadata: displayName (string), profileComplete (boolean). Gate via middleware to avoid DB reads.
+
+FORMS & VALIDATION
+
+- Use React Hook Form + Zod resolvers; schema per form in same file or nearby.
+- Client forms live in components; server mutations via Supabase client with RLS.
+- Keep submit handlers small; show success/error via sonner toast.
+
+TANSTACK QUERY
+
+- Use for data fetching post-auth (e.g., profile reads) with keys like ['profile'].
+- No queries inside middleware.
+
+HONO RPC
+
+- Base path /api; export typed client via hcWithType.
+- Prefer RPC for complex server logic; simple table ops can use supabase client with RLS.
+
+CODING STANDARDS
+
+- TypeScript strict, no any in public APIs. Functions and variables must be descriptive.
+- Prefer early returns; avoid deep nesting; avoid try/catch unless necessary.
+- Comments only for non-obvious rationale.
+- Keep files focused; avoid large components (>300 lines). Extract.
+
+UI/UX CONVENTIONS
+
+- shadcn/ui components. Consistent spacing and typography; respect theme.
+- Forms: clear labels, inline errors, disabled states during submit, optimistic navigation.
+- Onboarding: minimal, single-field-per-step with Next/Previous.
+
+ERROR HANDLING
+
+- Surface helpful messages. For auth, detect unconfirmed email and guide to confirm-email page with resend.
+- Middleware should fail open (NextResponse.next) on unexpected errors to prevent lockouts.
+
+GIT & MIGRATIONS
+
+- One migration per feature; include RLS and triggers.
+- Keep SQL idempotent where possible.
+
+FILE NAMING
+
+- kebab-case for files; PascalCase for components.
+
+ADD NEW FEATURES
+
+- Add DB schema + RLS → add UI/logic → wire middleware if gating → write docs entry in .cursorrules if pattern changes.
+
+NAMING CONVENTIONS
+
+- Variables and database columns: snake_case (e.g., first_name, profile_complete).
+- Functions and classes: snakeCase (camelCase), defined as arrow functions: `const doSomething = () => {}`.
+- Interfaces and types: SnakeCase (PascalCase), e.g., `UserProfile`, `UpsertProfileInput`.
+- Supabase `user_metadata` keys must use snake_case: `display_name` (string), `profile_complete` (boolean).
