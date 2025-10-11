@@ -56,6 +56,8 @@ export interface EventCalendarProps {
   onEventDelete?: (eventId: string) => void;
   className?: string;
   initialView?: CalendarView;
+  isLoading?: boolean;
+  isError?: boolean;
 }
 
 export function EventCalendar({
@@ -65,6 +67,8 @@ export function EventCalendar({
   onEventDelete,
   className,
   initialView = "month",
+  isLoading,
+  isError,
 }: EventCalendarProps) {
   // Use zustand store for cross-component calendar state
   const currentDate = useCalendarStore((s) => s.currentDate);
@@ -189,7 +193,7 @@ export function EventCalendar({
     } else {
       onEventAdd?.({
         ...event,
-        id: Math.random().toString(36).substring(2, 11),
+        id: "",
       });
       // Show toast notification when an event is added
       toast(`Event "${event.title}" added`, {
