@@ -40,7 +40,12 @@ export const updateSession = async (request: NextRequest) => {
     const pathname = request.nextUrl.pathname;
 
     // Define protected routes
-    const protected_routes = ["/dashboard"];
+    const protected_routes = [
+      "/calendar",
+      "/tasks",
+      "/reminders",
+      "/notifications",
+    ];
     const is_protected_route = protected_routes.some((route) =>
       pathname.startsWith(route)
     );
@@ -89,15 +94,15 @@ export const updateSession = async (request: NextRequest) => {
         return NextResponse.redirect(url);
       }
 
-      // If authenticated and on login/register, smart-redirect
-      if (on_login_or_register) {
+      // If authenticated and on login/register or root, smart-redirect
+      if (on_login_or_register || pathname === "/") {
         const url = request.nextUrl.clone();
         if (!email_confirmed) {
           url.pathname = "/auth/confirm-email";
         } else if (!profile_complete || !has_display_name) {
           url.pathname = "/onboarding";
         } else {
-          url.pathname = "/dashboard";
+          url.pathname = "/calendar";
         }
         return NextResponse.redirect(url);
       }

@@ -5,6 +5,7 @@ import { BotIcon, PlusIcon, XIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { client } from "@/lib/hono";
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -80,9 +81,23 @@ export const AIFab = ({ className }: AIFabProps) => {
               maxFiles={5}
               multiple
               onError={(e) => console.warn(e)}
-              onSubmit={(message) => {
-                // TODO: Wire this to your AI endpoint/hook
-                console.log("AI prompt submitted", message);
+              onSubmit={async (payload) => {
+                const text = payload.text?.trim() ?? "";
+                const attachments = (payload.files ?? []).map((f) => ({
+                  name: f.filename,
+                  type: f.mediaType,
+                  url: f.url,
+                }));
+
+                try {
+                  const res = await client.api.ai.$post({
+                    json: { message: text, attachments },
+                  });
+                  const data = (await res.json()) as { reply: string };
+                  console.log("AI reply:", data.reply);
+                } catch (err) {
+                  console.error("AI error", err);
+                }
               }}
             >
               <PromptInputBody>

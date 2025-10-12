@@ -4,11 +4,8 @@ import {
   IconBell,
   IconCalendar,
   IconChecklist,
-  IconHelp,
   IconInnerShadowTop,
-  IconLayoutDashboard,
-  IconNotebook,
-  IconSettings,
+  Icon,
 } from "@tabler/icons-react";
 import * as React from "react";
 
@@ -24,20 +21,28 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { ChatPanel } from "@/components/ai-elements/chat-panel";
+import type { Route } from "next";
 
-const data = {
+const data: {
+  navMain: {
+    title: string;
+    url: Route;
+    icon: Icon;
+  }[];
+  navSecondary: {
+    title: string;
+    url: Route;
+    icon: Icon;
+  }[];
+} = {
   navMain: [
-    { title: "Dashboard", url: "/dashboard", icon: IconLayoutDashboard },
-    { title: "Calendar", url: "/dashboard#calendar", icon: IconCalendar },
-    { title: "Tasks", url: "/dashboard#tasks", icon: IconChecklist },
-    { title: "Reminders", url: "/dashboard#reminders", icon: IconBell },
-    { title: "Courses", url: "/dashboard#courses", icon: IconNotebook },
-    { title: "Notifications", url: "/dashboard#notifications", icon: IconBell },
+    { title: "Calendar", url: "/calendar", icon: IconCalendar },
+    { title: "Tasks", url: "/tasks", icon: IconChecklist },
+    { title: "Reminders", url: "/reminders", icon: IconBell },
+    // { title: "Notifications", url: "/notifications", icon: IconBell },
   ],
-  navSecondary: [
-    { title: "Settings", url: "/settings", icon: IconSettings },
-    { title: "Get Help", url: "/help", icon: IconHelp },
-  ],
+  navSecondary: [],
 };
 
 export const AppSidebar = ({
@@ -54,15 +59,18 @@ export const AppSidebar = ({
             >
               <a href="#">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <span className="text-base font-semibold">Stuplan</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="flex flex-col">
         <NavMain items={data.navMain} minimal />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        {/* AI chat panel inside sidebar content, collapses with sidebar */}
+        <div className="flex-1 flex-grow rounded-md border p-2">
+          <ChatPanel />
+        </div>
       </SidebarContent>
       <SidebarFooter>
         <NavUser />

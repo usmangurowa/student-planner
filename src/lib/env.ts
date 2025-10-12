@@ -7,6 +7,7 @@ const env = (() => {
       server: {
         SUPABASE_URL: z.string(),
         SUPABASE_PUBLISHABLE_KEY: z.string(),
+        GOOGLE_GENERATIVE_AI_API_KEY: z.string(),
       },
       client: {
         NEXT_PUBLIC_SUPABASE_URL: z.string(),
@@ -22,6 +23,7 @@ const env = (() => {
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
           process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
         VERCEL_URL: process.env.VERCEL_URL,
+        GOOGLE_GENERATIVE_AI_API_KEY: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
       },
     });
     return created;
