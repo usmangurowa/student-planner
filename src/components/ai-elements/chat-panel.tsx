@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
-import { useChat } from "@ai-sdk/react";
+import { useChat, UIMessage } from "@ai-sdk/react";
 import { BotIcon } from "lucide-react";
-
+import { useLocalStorage } from "react-use";
 import {
   PromptInput,
   PromptInputAttachments,
@@ -22,7 +22,20 @@ import {
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
 export const ChatPanel = () => {
-  const { messages, sendMessage, status } = useChat();
+  const [chatHistory, setChatHistory] = useLocalStorage<UIMessage[]>(
+    "chats-history",
+    []
+  );
+
+  const { messages, sendMessage, status } = useChat({
+    messages: chatHistory || [],
+    onFinish: ({ message }) => {
+      console.log("onFinish", message);
+      setChatHistory((prev) => [...(prev || []), message]);
+    },
+  });
+
+  console.log(messages);
 
   return (
     <div className="flex h-full flex-col">
@@ -71,9 +84,10 @@ export const ChatPanel = () => {
         maxFiles={4}
         multiple
         onError={(e) => console.warn(e)}
-        onSubmit={async (payload) => {
+        onSubmit={async (payload, event) => {
           const text = payload.text?.trim() ?? "";
           if (!text) return;
+          event.currentTarget.reset();
           await sendMessage({
             text,
             files: (payload.files as any) || undefined,
@@ -86,7 +100,7 @@ export const ChatPanel = () => {
           </PromptInputAttachments>
           <PromptInputTextarea placeholder="Ask to schedule, plan tasks, or study times…" />
           <div className="flex items-center justify-end p-1">
-            <PromptInputSubmit />
+            <PromptInputSubmit disabled={status === "streaming"} />
           </div>
         </PromptInputBody>
       </PromptInput>

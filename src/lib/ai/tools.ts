@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Tool schemas for AI function-calling
-export const CreateEventSchema = z.object({
+export const EventSchema = z.object({
   type: z
     .enum(["event", "task"]) // task: start=reminder, end=due
     .describe(
@@ -14,7 +14,7 @@ export const CreateEventSchema = z.object({
   start: z.string().describe("ISO date-time"),
   end: z.string().describe("ISO date-time"),
 });
-export type CreateEventInput = z.infer<typeof CreateEventSchema>;
+export type CreateEventInput = z.infer<typeof EventSchema>;
 
 export const ReadCalendarSchema = z.object({
   from: z.string().optional().describe("ISO start of range"),

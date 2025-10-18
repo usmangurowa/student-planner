@@ -1,12 +1,9 @@
 import { google } from "@ai-sdk/google";
-import { generateText } from "ai";
+import { tool } from "ai";
 import { env } from "../env";
-import { CreateEventSchema, ReadCalendarSchema } from "@/lib/ai/tools";
-
-export type AiAttachment = { name?: string; type?: string; url?: string };
-export type AiRequest = { message: string; attachments?: AiAttachment[] };
-export type AiResponse = { reply: string };
-
+import { EventSchema, ReadCalendarSchema } from "@/lib/ai/tools";
+import { z } from "zod";
+import {} from "@/lib/supabase/server";
 export const systemPrompt = `
 <system>
   <persona>
@@ -33,7 +30,7 @@ export const systemPrompt = `
       ${ReadCalendarSchema.toString()}
     </tool>
     <tool name="create_event" purpose="Create a calendar item (event or task)">
-      ${CreateEventSchema.toString()}
+      ${EventSchema.toString()}
     </tool>
     Use tools when needed. Example: If the user asks to schedule study times for exams,
     read the calendar to find exam dates and propose times, then create events.
@@ -52,24 +49,14 @@ export const systemPrompt = `
 </system>
 `.trim();
 
-const model = google("gemini-1.5-pro");
+export const model = google("gemini-2.5-flash");
 
-export const generateAiResponse = async (
-  input: AiRequest
-): Promise<AiResponse> => {
-  const userText = input.message?.trim() || "";
-  if (!userText)
-    return {
-      reply: "Ask me anything about your schedule, tasks, or study planning.",
-    };
-
-  const { text } = await generateText({
-    model,
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userText },
-    ],
-  });
-
-  return { reply: text || "I could not generate a response." };
-};
+export const readCalendarTool = tool({
+  name: "read_calendar",
+  description: "Read user calendar (optionally in a date range; filter tasks)",
+  inputSchema: ReadCalendarSchema,
+  outputSchema: z.array(EventSchema),
+  execute: async (input) => {
+    return [];
+  },
+});
