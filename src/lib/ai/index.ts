@@ -39,17 +39,17 @@ export const generateSystemPrompt = ({
 - **Purpose**: Add new events or tasks to user's calendar
 - **Parameters** (all required unless marked optional):
   - userId: ${user_id} (required)
-  - type: "event" or "task" (required)
-    - "event": Has start time and end time
-    - "task": Has reminder time (start) and due date (end)
-  - title: string, 1-100 chars (required)
-  - start: ISO datetime (required)
-  - end: ISO datetime (required)
-  - description: string (optional)
-  - location: string (optional)
-  - color: "blue" | "orange" | "violet" | "rose" | "emerald" (optional)
-  - allDay: boolean (optional, default: false)
-- **Returns**: Confirmation of created item with ID
+ - events: Single event object OR array of event objects (max 10) (required)
+    - Each event object contains:
+      - type: "event" or "task" (required)
+      - title: string, 1-100 chars (required)
+      - start: ISO datetime (required)
+      - end: ISO datetime (required)
+      - description: string (optional)
+      - location: string (optional)
+      - color: "blue" | "orange" | "violet" | "rose" | "emerald" (optional)
+      - allDay: boolean (optional, default: false)
+- **Returns**: Single event object or array of created events
 
 ### Tool: update_event
 - **Purpose**: Modify an existing event or task in user's calendar
@@ -213,50 +213,57 @@ const CreateEventInputSchema = z.object({
 export const createEventTool = tool({
   name: "create_event",
   description: "Create a new event or task in the user's calendar",
-  inputSchema: CreateEventInputSchema,
-  outputSchema: EventSchema,
+  inputSchema: z
+    .object({
+      userId: z.string().describe("User ID who is creating the event"),
+      events: z
+        .array(CreateEventInputSchema)
+        .describe("Array of events to create"),
+    })
+    .describe("Single event or array of events to create"),
+  outputSchema: z.array(EventSchema),
   execute: async (input) => {
-    console.log("creating event/task", input.title);
     const supabase = await createClient();
 
     if (!input.userId) {
       throw new Error("User ID is required to create an event.");
     }
 
-    const eventPayload = {
-      title: input.title,
-      description: input.description || null,
-      color: input.color || null,
-      location: input.location || null,
-      category: input.type,
-      start: new Date(input.start).toISOString(),
-      end: new Date(input.end).toISOString(),
-      allDay: input.allDay || false,
+    const eventsToCreate = Array.isArray(input.events)
+      ? input.events
+      : [input.events];
+
+    const eventsPayloads = eventsToCreate.map((event) => ({
+      title: event.title,
+      description: event.description || null,
+      color: event.color || null,
+      location: event.location || null,
+      category: event.type,
+      start: event.start,
+      end: event.end,
+      allDay: event.allDay || false,
       created_by: input.userId,
-    };
+    }));
 
     const { data, error } = await supabase
       .from("events")
-      .insert([eventPayload])
-      .select()
-      .single();
+      .insert(eventsPayloads)
+      .select();
 
     if (error) {
       console.error("Error creating event:", error);
       throw new Error(`Failed to create event: ${error.message}`);
     }
 
-    console.log("Event created successfully", data.id);
-
-    return {
-      type: data.category as EventType["type"],
-      title: data.title || "",
-      description: data.description || undefined,
-      color: data.color || undefined,
-      location: data.location || undefined,
-      start: data.start || "",
-      end: data.end || "",
-    } as EventType;
+    return eventsPayloads.map((event) => ({
+      type: event.category as EventType["type"],
+      title: event.title || "",
+      description: event.description || undefined,
+      color: event.color || undefined,
+      location: event.location || undefined,
+      start: event.start || "",
+      end: event.end || "",
+    })) as EventType[];
   },
 });
 
@@ -298,8 +305,8 @@ export const updateEventTool = tool({
     const updatePayload = {
       title: input.title || undefined,
       category: input.type || undefined,
-      start: input.start ? new Date(input.start).toISOString() : undefined,
-      end: input.end ? new Date(input.end).toISOString() : undefined,
+      start: input.start || undefined,
+      end: input.end || undefined,
       description: input.description || undefined,
       location: input.location || undefined,
       color: input.color || undefined,
@@ -318,8 +325,6 @@ export const updateEventTool = tool({
       console.error("Error updating event:", error);
       throw new Error(`Failed to update event: ${error.message}`);
     }
-
-    console.log("Event updated successfully", data.id);
 
     return {
       type: data.category as EventType["type"],
