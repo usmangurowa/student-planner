@@ -4,6 +4,7 @@ import { EventSchema, EventType, ReadCalendarSchema } from "@/lib/ai/tools";
 import { z } from "zod";
 import {} from "@/lib/supabase/server";
 import { createClient } from "../supabase/admin";
+import { getTimezoneOffset, parseLocalTimeToUTC } from "@/lib/utils";
 
 export const generateSystemPrompt = ({
   user_id,
@@ -15,6 +16,7 @@ export const generateSystemPrompt = ({
   user_timezone: string;
 }) => {
   const today = new Date().toISOString().split("T")[0];
+  const timezoneOffset = getTimezoneOffset(user_timezone);
 
   return `You are Stuplan, an expert student planning assistant. Your role is to help ${user_name ? user_name : "the user"} manage their time, break down assignments, and reduce academic stress through smart planning.
 
@@ -76,8 +78,11 @@ export const generateSystemPrompt = ({
 5. Only ask for confirmation if the user's request is ambiguous or conflicting
 
 ### When Creating Events
-1. Use ISO 8601 format for all dates/times (e.g., "2025-10-20T14:00:00Z")
-2. All times should be in the user's timezone: ${user_timezone}
+1. Use ISO 8601 format WITH TIMEZONE OFFSET for all dates/times
+   - Format: "2025-10-20T08:00:00+01:00" (NOT "2025-10-20T08:00:00Z")
+   - User timezone: ${user_timezone} with offset: +01:00 (example for WAT)
+   - Always include the full timezone offset in every datetime you generate
+2. All times should be interpreted in the user's timezone: ${user_timezone}
 3. For events: start < end
 4. For tasks: reminder time is typically business hours (9 AM), due date is end of business day
 5. Validate that times make sense (e.g., study sessions 1-4 hours, not 30 minutes)
@@ -118,6 +123,7 @@ export const generateSystemPrompt = ({
 - User ID: ${user_id}
 - User name: ${user_name ? user_name : "(not provided)"}
 - User timezone: ${user_timezone}
+- Timezone offset: ${timezoneOffset}
 
 ## Example Interaction
 
@@ -130,6 +136,9 @@ User: "Schedule 2 hours for history essay next Friday at 3pm"
 Your response: "I'll add that to your calendar for next Friday at 15:00-17:00."
 (Call read_calendar to check for conflicts, then call create_event)
 Your response: "Done! I've added 'History essay - 2 hours' to your calendar for Friday 15:00-17:00."
+
+**CRITICAL: Always include timezone offset in all ISO datetimes sent to create_event and update_event**
+Example: For WAT (+01:00): "2025-10-24T15:00:00+01:00" NOT "2025-10-24T15:00:00Z"
 
 ## Key Constraints
 1. Only ask for confirmation when essential details are missing or requests are ambiguous
@@ -233,17 +242,23 @@ export const createEventTool = tool({
       ? input.events
       : [input.events];
 
-    const eventsPayloads = eventsToCreate.map((event) => ({
-      title: event.title,
-      description: event.description || null,
-      color: event.color || null,
-      location: event.location || null,
-      category: event.type,
-      start: event.start,
-      end: event.end,
-      allDay: event.allDay || false,
-      created_by: input.userId,
-    }));
+    const eventsPayloads = eventsToCreate.map((event) => {
+      // Convert timezone-aware ISO strings to UTC
+      const startUTC = parseLocalTimeToUTC(event.start);
+      const endUTC = parseLocalTimeToUTC(event.end);
+
+      return {
+        title: event.title,
+        description: event.description || null,
+        color: event.color || null,
+        location: event.location || null,
+        category: event.type,
+        start: startUTC,
+        end: endUTC,
+        allDay: event.allDay || false,
+        created_by: input.userId,
+      };
+    });
 
     const { data, error } = await supabase
       .from("events")
@@ -305,8 +320,8 @@ export const updateEventTool = tool({
     const updatePayload = {
       title: input.title || undefined,
       category: input.type || undefined,
-      start: input.start || undefined,
-      end: input.end || undefined,
+      start: input.start ? parseLocalTimeToUTC(input.start) : undefined,
+      end: input.end ? parseLocalTimeToUTC(input.end) : undefined,
       description: input.description || undefined,
       location: input.location || undefined,
       color: input.color || undefined,

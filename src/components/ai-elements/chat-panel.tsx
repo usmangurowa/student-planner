@@ -16,14 +16,21 @@ import {
   ConversationEmptyState,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import { useUser } from "@/hooks/use-user";
-import { useEffect } from "react";
+import { CurrentUserProfile, useUser } from "@/hooks/use-user";
 import { Response } from "./response";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const ChatPanel = () => {
   const { data, isLoading } = useUser();
 
+  if (isLoading || !data) {
+    return null;
+  }
+
+  return <ChatPanelContent user={data} />;
+};
+
+export const ChatPanelContent = ({ user }: { user: CurrentUserProfile }) => {
   const user_timezone =
     Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 
@@ -31,7 +38,7 @@ export const ChatPanel = () => {
 
   // Only initialize localStorage when we have a valid user ID
   const [chatHistory, setChatHistory] = useLocalStorage<UIMessage[]>(
-    data?.id ? `${data.id}-chats-history` : "",
+    `${user!.id}-chats-history`,
     []
   );
 
@@ -43,10 +50,6 @@ export const ChatPanel = () => {
       void queryClient.invalidateQueries({ queryKey: ["events"] });
     },
   });
-
-  if (isLoading || !data) {
-    return null;
-  }
 
   return (
     <div className="flex h-full flex-col">
@@ -103,8 +106,8 @@ export const ChatPanel = () => {
             text,
             files: (payload.files as any) || undefined,
             metadata: {
-              user_id: data?.id,
-              user_name: data?.display_name,
+              user_id: user?.id,
+              user_name: user?.display_name,
               user_timezone,
             },
           });
