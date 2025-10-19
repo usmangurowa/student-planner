@@ -1,20 +1,8 @@
 import { Hono } from "hono";
 import { hc } from "hono/client";
-import {
-  streamText,
-  convertToModelMessages,
-  generateText,
-  stepCountIs,
-} from "ai";
 
 import { env } from "../env";
-import {
-  model,
-  generateSystemPrompt,
-  readCalendarTool,
-  createEventTool,
-  updateEventTool,
-} from "@/lib/ai";
+import { handleChat } from "@/lib/ai";
 
 export const app = new Hono()
   .basePath("/api")
@@ -24,34 +12,24 @@ export const app = new Hono()
     const body = await c.req.json();
     const uiMessages = Array.isArray(body?.messages) ? body.messages : [];
 
-    let user_id = "";
-    let user_name = "";
-    let user_timezone = "UTC";
-
+    // Extract user metadata from the last message
     const lastMessage = uiMessages[uiMessages.length - 1];
-    if (lastMessage && lastMessage.metadata) {
-      user_id = lastMessage.metadata.user_id;
-      user_name = lastMessage.metadata.user_name;
-      user_timezone = lastMessage.metadata.user_timezone;
-    }
-
-    let modelMessages = convertToModelMessages(uiMessages);
+    const user_id = lastMessage?.metadata?.user_id || "";
+    const user_name = lastMessage?.metadata?.user_name;
+    const user_timezone = lastMessage?.metadata?.user_timezone || "UTC";
 
     try {
-      const result = streamText({
-        model,
-        messages: modelMessages,
-        system: generateSystemPrompt({ user_id, user_name, user_timezone }),
-        tools: {
-          readCalendar: readCalendarTool,
-          createEvent: createEventTool,
-          updateEvent: updateEventTool,
-        },
-        stopWhen: stepCountIs(5),
+      // Handle the chat request and return the streaming response
+      const result = await handleChat({
+        messages: uiMessages,
+        user_id,
+        user_name,
+        user_timezone,
       });
 
       return result.toUIMessageStreamResponse();
     } catch (error) {
+      console.error("Chat error:", error);
       return c.json({ error: "Failed to generate response." }, 500);
     }
   });

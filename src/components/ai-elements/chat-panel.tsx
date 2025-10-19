@@ -19,6 +19,7 @@ import {
 import { CurrentUserProfile, useUser } from "@/hooks/use-user";
 import { Response } from "./response";
 import { useQueryClient } from "@tanstack/react-query";
+import { Message, MessageAvatar, MessageContent } from "./message";
 
 export const ChatPanel = () => {
   const { data, isLoading } = useUser();
@@ -74,12 +75,15 @@ export const ChatPanelContent = ({ user }: { user: CurrentUserProfile }) => {
                       .join("")
                   : ((m as any).content ?? "");
                 return (
-                  <div key={i} className="text-sm leading-6">
-                    <div className="text-muted-foreground mb-0.5 text-xs">
-                      {(m as any).role === "user" ? "You" : "Stuplan"}
-                    </div>
-                    <Response>{text}</Response>
-                  </div>
+                  <Message from={m.role} key={m.id}>
+                    <MessageContent>
+                      <Response>{text}</Response>
+                    </MessageContent>
+                    <MessageAvatar
+                      src={user!.avatar || ""}
+                      name={m.role === "user" ? user!.display_name || "" : "AI"}
+                    />
+                  </Message>
                 );
               })}
               {(status === "submitted" || status === "streaming") && (
