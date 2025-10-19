@@ -19,12 +19,19 @@ import {
 import { useUser } from "@/hooks/use-user";
 import { useEffect } from "react";
 import { Response } from "./response";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const ChatPanel = () => {
-  const { data } = useUser();
+  const { data, isLoading } = useUser();
 
+  const user_timezone =
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+
+  const queryClient = useQueryClient();
+
+  // Only initialize localStorage when we have a valid user ID
   const [chatHistory, setChatHistory] = useLocalStorage<UIMessage[]>(
-    `${data?.id}-chats-history`,
+    data?.id ? `${data.id}-chats-history` : "",
     []
   );
 
@@ -32,10 +39,12 @@ export const ChatPanel = () => {
     messages: chatHistory || [],
     onFinish: ({ message }) => {
       setChatHistory((prev) => [...(prev || []), message]);
+
+      void queryClient.invalidateQueries({ queryKey: ["events"] });
     },
   });
 
-  if (!data) {
+  if (isLoading || !data) {
     return null;
   }
 
@@ -96,6 +105,7 @@ export const ChatPanel = () => {
             metadata: {
               user_id: data?.id,
               user_name: data?.display_name,
+              user_timezone,
             },
           });
         }}

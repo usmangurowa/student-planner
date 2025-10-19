@@ -68,7 +68,7 @@ export const AppSidebar = ({
       <SidebarContent className="flex flex-col">
         <NavMain items={data.navMain} minimal />
         {/* AI chat panel inside sidebar content, collapses with sidebar */}
-        <div className="flex-1 flex-grow rounded-md border p-2">
+        <div className="h-[89%] rounded-md border p-2">
           <ChatPanel />
         </div>
       </SidebarContent>

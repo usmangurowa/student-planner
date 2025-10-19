@@ -8,7 +8,13 @@ import {
 } from "ai";
 
 import { env } from "../env";
-import { model, generateSystemPrompt, readCalendarTool } from "@/lib/ai";
+import {
+  model,
+  generateSystemPrompt,
+  readCalendarTool,
+  createEventTool,
+  updateEventTool,
+} from "@/lib/ai";
 
 export const app = new Hono()
   .basePath("/api")
@@ -20,11 +26,13 @@ export const app = new Hono()
 
     let user_id = "";
     let user_name = "";
+    let user_timezone = "UTC";
 
     const lastMessage = uiMessages[uiMessages.length - 1];
     if (lastMessage && lastMessage.metadata) {
       user_id = lastMessage.metadata.user_id;
       user_name = lastMessage.metadata.user_name;
+      user_timezone = lastMessage.metadata.user_timezone;
     }
 
     let modelMessages = convertToModelMessages(uiMessages);
@@ -33,8 +41,12 @@ export const app = new Hono()
       const result = streamText({
         model,
         messages: modelMessages,
-        system: generateSystemPrompt({ user_id, user_name }),
-        tools: { readCalendar: readCalendarTool },
+        system: generateSystemPrompt({ user_id, user_name, user_timezone }),
+        tools: {
+          readCalendar: readCalendarTool,
+          createEvent: createEventTool,
+          updateEvent: updateEventTool,
+        },
         stopWhen: stepCountIs(5),
       });
 
