@@ -14,11 +14,12 @@ export const EventSchema = z.object({
   start: z.string().describe("ISO date-time"),
   end: z.string().describe("ISO date-time"),
 });
-export type CreateEventInput = z.infer<typeof EventSchema>;
+export type EventType = z.infer<typeof EventSchema>;
 
 export const ReadCalendarSchema = z.object({
   from: z.string().optional().describe("ISO start of range"),
   to: z.string().optional().describe("ISO end of range"),
+  userId: z.string().describe("User ID whose calendar to read"),
   onlyTasks: z.boolean().optional().default(false),
 });
 export type ReadCalendarInput = z.infer<typeof ReadCalendarSchema>;

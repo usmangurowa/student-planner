@@ -1,9 +1,14 @@
 import { Hono } from "hono";
 import { hc } from "hono/client";
-import { streamText, convertToModelMessages, generateText } from "ai";
+import {
+  streamText,
+  convertToModelMessages,
+  generateText,
+  stepCountIs,
+} from "ai";
 
 import { env } from "../env";
-import { model, systemPrompt } from "@/lib/ai";
+import { model, generateSystemPrompt, readCalendarTool } from "@/lib/ai";
 
 export const app = new Hono()
   .basePath("/api")
@@ -12,24 +17,25 @@ export const app = new Hono()
   .post("/chat", async (c) => {
     const body = await c.req.json();
     const uiMessages = Array.isArray(body?.messages) ? body.messages : [];
-    let modelMessages = convertToModelMessages(uiMessages);
 
-    const hasSystemPrompt = modelMessages.some((msg) => msg.role === "system");
+    let user_id = "";
+    let user_name = "";
 
-    if (!hasSystemPrompt) {
-      modelMessages = [
-        {
-          role: "system",
-          content: systemPrompt,
-        },
-        ...modelMessages,
-      ];
+    const lastMessage = uiMessages[uiMessages.length - 1];
+    if (lastMessage && lastMessage.metadata) {
+      user_id = lastMessage.metadata.user_id;
+      user_name = lastMessage.metadata.user_name;
     }
 
+    let modelMessages = convertToModelMessages(uiMessages);
+
     try {
-      const result = await streamText({
+      const result = streamText({
         model,
         messages: modelMessages,
+        system: generateSystemPrompt({ user_id, user_name }),
+        tools: { readCalendar: readCalendarTool },
+        stopWhen: stepCountIs(5),
       });
 
       return result.toUIMessageStreamResponse();

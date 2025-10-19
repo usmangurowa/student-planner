@@ -8,6 +8,7 @@ const env = (() => {
         SUPABASE_URL: z.string(),
         SUPABASE_PUBLISHABLE_KEY: z.string(),
         GOOGLE_GENERATIVE_AI_API_KEY: z.string(),
+        SUPABASE_SERVICE_ROLE_KEY: z.string(),
       },
       client: {
         NEXT_PUBLIC_SUPABASE_URL: z.string(),
@@ -19,6 +20,7 @@ const env = (() => {
       runtimeEnv: {
         SUPABASE_URL: process.env.SUPABASE_URL,
         SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
         NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
           process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,

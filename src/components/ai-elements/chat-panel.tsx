@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import { useChat, UIMessage } from "@ai-sdk/react";
 import { BotIcon } from "lucide-react";
 import { useLocalStorage } from "react-use";
@@ -17,25 +16,28 @@ import {
   ConversationEmptyState,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-// removed client import; useChat handles API calls
-
-type ChatMessage = { role: "user" | "assistant"; content: string };
+import { useUser } from "@/hooks/use-user";
+import { useEffect } from "react";
+import { Response } from "./response";
 
 export const ChatPanel = () => {
+  const { data } = useUser();
+
   const [chatHistory, setChatHistory] = useLocalStorage<UIMessage[]>(
-    "chats-history",
+    `${data?.id}-chats-history`,
     []
   );
 
   const { messages, sendMessage, status } = useChat({
     messages: chatHistory || [],
     onFinish: ({ message }) => {
-      console.log("onFinish", message);
       setChatHistory((prev) => [...(prev || []), message]);
     },
   });
 
-  console.log(messages);
+  if (!data) {
+    return null;
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -64,7 +66,7 @@ export const ChatPanel = () => {
                     <div className="text-muted-foreground mb-0.5 text-xs">
                       {(m as any).role === "user" ? "You" : "Stuplan"}
                     </div>
-                    <div className="whitespace-pre-wrap">{text}</div>
+                    <Response>{text}</Response>
                   </div>
                 );
               })}
@@ -91,6 +93,10 @@ export const ChatPanel = () => {
           await sendMessage({
             text,
             files: (payload.files as any) || undefined,
+            metadata: {
+              user_id: data?.id,
+              user_name: data?.display_name,
+            },
           });
         }}
       >
