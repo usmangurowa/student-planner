@@ -1,5 +1,6 @@
-import { cn } from "@/lib/utils";
 import { IconInnerShadowTop } from "@tabler/icons-react";
+
+import { cn } from "@/lib/utils";
 
 export const Logo = ({
   className,
