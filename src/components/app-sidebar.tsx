@@ -1,16 +1,17 @@
 "use client";
 
 import {
+  Icon,
   IconBell,
   IconCalendar,
   IconChecklist,
   IconInnerShadowTop,
-  Icon,
 } from "@tabler/icons-react";
+import type { Route } from "next";
 import * as React from "react";
 
+import { ChatPanel } from "@/components/ai-elements/chat-panel";
 import { NavMain } from "@/components/nav-main";
-import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -21,8 +22,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { ChatPanel } from "@/components/ai-elements/chat-panel";
-import type { Route } from "next";
 
 const data: {
   navMain: {
@@ -66,7 +65,7 @@ export const AppSidebar = ({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent className="flex flex-col">
-        <NavMain items={data.navMain} minimal />
+        <NavMain items={data.navMain} />
         {/* AI chat panel inside sidebar content, collapses with sidebar */}
         <div className="h-[89%] rounded-md border p-2">
           <ChatPanel />

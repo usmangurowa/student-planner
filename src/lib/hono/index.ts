@@ -1,8 +1,9 @@
 import { Hono } from "hono";
 import { hc } from "hono/client";
 
-import { env } from "../env";
 import { handleChat } from "@/lib/ai";
+
+import { env } from "../env";
 
 export const app = new Hono()
   .basePath("/api")

@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase/client";
-import type { Tables } from "@/lib/supabase/database.types";
 import type {
   CalendarEvent,
   EventColor,
 } from "@/components/calendar/event-calendar/types";
+import { createClient } from "@/lib/supabase/client";
+import type { Tables } from "@/lib/supabase/database.types";
 
 export type EventRow = Tables<"events">;
 

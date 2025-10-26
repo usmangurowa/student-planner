@@ -1,7 +1,7 @@
 "use client";
 
-import { etiquettes } from "./etiquettes";
-import { useCalendarStore } from "./calendar-store";
+import { ChevronDownIcon } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,7 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDownIcon } from "lucide-react";
+
+import { useCalendarStore } from "./calendar-store";
+import { etiquettes } from "./etiquettes";
 
 export function EtiquetteFilter() {
   const visibleColors = useCalendarStore((s) => s.visibleColors);

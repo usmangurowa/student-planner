@@ -1,6 +1,5 @@
 "use client";
 
-import React, { useMemo } from "react";
 import {
   addHours,
   areIntervalsOverlapping,
@@ -17,18 +16,20 @@ import {
   startOfDay,
   startOfWeek,
 } from "date-fns";
+import React, { useMemo } from "react";
 
+import { cn } from "@/lib/utils";
+
+import { EndHour,StartHour } from "./constants";
 import {
+  type CalendarEvent,
   DraggableEvent,
   DroppableCell,
   EventItem,
   isMultiDayEvent,
   useCurrentTimeIndicator,
   WeekCellsHeight,
-  type CalendarEvent,
 } from "./index";
-import { StartHour, EndHour } from "./constants";
-import { cn } from "@/lib/utils";
 
 interface WeekViewProps {
   currentDate: Date;

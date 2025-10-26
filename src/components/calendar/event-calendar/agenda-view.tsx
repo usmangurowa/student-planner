@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
-import { CalendarIcon } from "lucide-react";
 import { addDays, format, isToday } from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { useMemo } from "react";
 
 import {
   AgendaDaysToShow,

@@ -1,11 +1,8 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
-import {
-  listCurrentUserEvents,
-  isTaskRow,
-} from "@/lib/supabase/queries/events";
 
 import { SiteHeader } from "@/components/site-header";
+import { listCurrentUserEvents } from "@/lib/supabase/queries/events";
 
 const Page = () => {
   const { data: rows = [], isLoading } = useQuery({

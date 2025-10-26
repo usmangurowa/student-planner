@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { endOfWeek, isSameDay, isWithinInterval, startOfWeek } from "date-fns";
-import { StartHour, EndHour } from "../constants";
+import { useEffect, useState } from "react";
+
+import { EndHour,StartHour } from "../constants";
 
 export function useCurrentTimeIndicator(
   currentDate: Date,

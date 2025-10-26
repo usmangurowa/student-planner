@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useCalendarStore } from "./event-calendar/calendar-store";
+
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+
+import { useCalendarStore } from "./event-calendar/calendar-store";
 
 interface SidebarCalendarProps {
   className?: string;

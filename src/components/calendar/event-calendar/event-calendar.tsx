@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useCalendarStore } from "./calendar-store";
 import {
   addDays,
   addMonths,
@@ -18,8 +16,22 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+
+import { useCalendarStore } from "./calendar-store";
+import { EtiquetteFilter } from "./etiquette-filter";
 import {
   addHoursToDate,
   AgendaDaysToShow,
@@ -35,17 +47,6 @@ import {
   WeekCellsHeight,
   WeekView,
 } from "./index";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuShortcut,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { EtiquetteFilter } from "./etiquette-filter";
-import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 // import ThemeToggle from "../theme-toggle";
 // import Participants from "@/components/participants";
 
@@ -67,8 +68,6 @@ export function EventCalendar({
   onEventDelete,
   className,
   initialView = "month",
-  isLoading,
-  isError,
 }: EventCalendarProps) {
   // Use zustand store for cross-component calendar state
   const currentDate = useCalendarStore((s) => s.currentDate);

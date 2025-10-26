@@ -1,25 +1,29 @@
 "use client";
-import { useChat, UIMessage } from "@ai-sdk/react";
+
+import { useChat } from "@ai-sdk/react";
+import { useQueryClient } from "@tanstack/react-query";
+import type { UIMessage as UIMessageType } from "ai";
 import { BotIcon } from "lucide-react";
 import { useLocalStorage } from "react-use";
-import {
-  PromptInput,
-  PromptInputAttachments,
-  PromptInputAttachment,
-  PromptInputBody,
-  PromptInputSubmit,
-  PromptInputTextarea,
-} from "@/components/ai-elements/prompt-input";
+
 import {
   Conversation,
   ConversationContent,
   ConversationEmptyState,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
+import {
+  PromptInput,
+  PromptInputAttachment,
+  PromptInputAttachments,
+  PromptInputBody,
+  PromptInputSubmit,
+  PromptInputTextarea,
+} from "@/components/ai-elements/prompt-input";
 import { CurrentUserProfile, useUser } from "@/hooks/use-user";
-import { Response } from "./response";
-import { useQueryClient } from "@tanstack/react-query";
+
 import { Message, MessageAvatar, MessageContent } from "./message";
+import { Response } from "./response";
 
 export const ChatPanel = () => {
   const { data, isLoading } = useUser();
@@ -38,7 +42,7 @@ export const ChatPanelContent = ({ user }: { user: CurrentUserProfile }) => {
   const queryClient = useQueryClient();
 
   // Only initialize localStorage when we have a valid user ID
-  const [chatHistory, setChatHistory] = useLocalStorage<UIMessage[]>(
+  const [chatHistory, setChatHistory] = useLocalStorage<UIMessageType[]>(
     `${user!.id}-chats-history`,
     []
   );
@@ -64,16 +68,28 @@ export const ChatPanelContent = ({ user }: { user: CurrentUserProfile }) => {
             />
           ) : (
             <div className="space-y-3">
-              {messages.map((m, i: number) => {
-                const parts = (m as any).parts as Array<any> | undefined;
-                const text = Array.isArray(parts)
-                  ? parts
-                      .filter(
-                        (p) => p?.type === "text" && typeof p.text === "string"
-                      )
-                      .map((p) => p.text)
-                      .join("")
-                  : ((m as any).content ?? "");
+              {messages.map((m) => {
+                // Extract text from message parts or content
+                let text = "";
+                if (
+                  Array.isArray((m as unknown as Record<string, unknown>).parts)
+                ) {
+                  const parts = (m as unknown as Record<string, unknown>)
+                    .parts as Array<Record<string, unknown>>;
+                  text = parts
+                    .filter(
+                      (p) => p?.type === "text" && typeof p.text === "string"
+                    )
+                    .map((p) => p.text as string)
+                    .join("");
+                } else if (
+                  typeof (m as unknown as Record<string, unknown>).content ===
+                  "string"
+                ) {
+                  text = (m as unknown as Record<string, unknown>)
+                    .content as string;
+                }
+
                 return (
                   <Message from={m.role} key={m.id}>
                     <MessageContent>
@@ -108,7 +124,9 @@ export const ChatPanelContent = ({ user }: { user: CurrentUserProfile }) => {
           event.currentTarget.reset();
           await sendMessage({
             text,
-            files: (payload.files as any) || undefined,
+            files:
+              (Array.isArray(payload.files) ? payload.files : undefined) ||
+              undefined,
             metadata: {
               user_id: user?.id,
               user_name: user?.display_name,

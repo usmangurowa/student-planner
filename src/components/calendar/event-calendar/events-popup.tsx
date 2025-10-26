@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
 import { format, isSameDay } from "date-fns";
 import { XIcon } from "lucide-react";
+import { useEffect, useMemo, useRef } from "react";
 
-import { EventItem, type CalendarEvent } from "./index";
+import { type CalendarEvent,EventItem } from "./index";
 
 interface EventsPopupProps {
   date: Date;

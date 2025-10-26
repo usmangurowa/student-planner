@@ -1,4 +1,5 @@
-import { streamText, convertToModelMessages, stepCountIs } from "ai";
+import { convertToModelMessages, stepCountIs, streamText, UIMessage } from "ai";
+
 import { model } from "./model";
 import { generateSystemPrompt } from "./system-prompt";
 import { createEventTool } from "./tools/create-event";
@@ -6,7 +7,7 @@ import { readCalendarTool } from "./tools/read-calendar";
 import { updateEventTool } from "./tools/update-event";
 
 export interface ChatHandlerInput {
-  messages: any[];
+  messages: UIMessage[];
   user_id: string;
   user_name?: string;
   user_timezone: string;
@@ -32,7 +33,7 @@ export const handleChat = (input: ChatHandlerInput) => {
       createEvent: createEventTool,
       updateEvent: updateEventTool,
     },
-    stopWhen: stepCountIs(5),
+    stopWhen: stepCountIs(10),
   });
 
   return result;

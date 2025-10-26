@@ -1,7 +1,8 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/admin";
+
 import { EventSchema, EventType } from "@/lib/ai/tools";
+import { createClient } from "@/lib/supabase/admin";
 import { parseLocalTimeToUTC } from "@/lib/utils";
 
 const CreateEventInputSchema = z.object({
@@ -64,7 +65,7 @@ export const createEventTool = tool({
       };
     });
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("events")
       .insert(eventsPayloads)
       .select();

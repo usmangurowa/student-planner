@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { CalendarIcon, TrashIcon } from "lucide-react";
 import { format, isBefore } from "date-fns";
+import { CalendarIcon, TrashIcon } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
-import type { CalendarEvent, EventColor } from "./index";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -33,12 +31,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+
 import {
-  StartHour,
-  EndHour,
-  DefaultStartHour,
   DefaultEndHour,
+  DefaultStartHour,
+  EndHour,
+  StartHour,
 } from "./constants";
+import type { CalendarEvent, EventColor } from "./index";
 
 interface EventDialogProps {
   event: CalendarEvent | null;

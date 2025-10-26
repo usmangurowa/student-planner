@@ -1,7 +1,8 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/admin";
+
 import { EventSchema, EventType, ReadCalendarSchema } from "@/lib/ai/tools";
+import { createClient } from "@/lib/supabase/admin";
 
 export const readCalendarTool = tool({
   name: "read_calendar",

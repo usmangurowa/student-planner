@@ -1,23 +1,23 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useCalendarStore } from "./event-calendar/calendar-store";
 
-import { EventCalendar, type CalendarEvent } from "./event-calendar";
+import { type CalendarEvent,EventCalendar } from "./event-calendar";
+import { useCalendarStore } from "./event-calendar/calendar-store";
 
 // Etiquettes data for calendar filtering
 export { etiquettes } from "./event-calendar/etiquettes";
 
 import {
+  deleteEvent as deleteEventMutation,
+  upsertEvent,
+} from "@/lib/supabase/mutations/events";
+import {
+  fromCalendarEvent,
   listCurrentUserEvents,
   toCalendarEvent,
-  fromCalendarEvent,
 } from "@/lib/supabase/queries/events";
-import {
-  upsertEvent,
-  deleteEvent as deleteEventMutation,
-} from "@/lib/supabase/mutations/events";
 
 export default function Component() {
   const isColorVisible = useCalendarStore((s) => s.isColorVisible);
